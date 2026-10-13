@@ -1,5 +1,7 @@
 # CRYSTALL — Lit Hands
 
+**Live:** https://alihaddi-dotcom.github.io/crystall-lit-hands/ (needs a WebGPU browser)
+
 An experimental landing page: two hands drawn from ~1,500 lit GPU tubes, holding a glowing orb, behind a plain HTML page.
 
 Built with Three.js `WebGPURenderer` and TSL. The tube technique is a from-scratch reimplementation of the approach described in Mathis Biabiany's Codrops article [Drawing With Light: An Exploration of Lit GPU Tubes with TSL and WebGPU](https://tympanus.net/codrops/2026/09/07/drawing-with-light-an-exploration-of-lit-gpu-tubes-with-tsl-and-webgpu/) ([original demo](https://luminhands.netlify.app/)).
