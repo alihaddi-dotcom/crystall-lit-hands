@@ -12,7 +12,7 @@ const HAND_LENGTH = 2.5;
 const WRIST = new THREE.Vector3(-0.22, -1.35, 0);
 
 async function loadHandGraph() {
-  const gltf = await new GLTFLoader().loadAsync("/left.glb");
+  const gltf = await new GLTFLoader().loadAsync(`${import.meta.env.BASE_URL}left.glb`);
   gltf.scene.updateMatrixWorld(true);
   let mesh;
   gltf.scene.traverse((o) => { if (o.isMesh) mesh = o; });
