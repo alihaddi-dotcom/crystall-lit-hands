@@ -1,8 +1,10 @@
-// Static blog generator: posts/<slug>/{en,ja}.md → blog/index.html + blog/<slug>.html.
+// Static blog generator: posts/<slug>/index.{ja,en}.md → blog/index.html + blog/<slug>.html.
+// The layout matches the CMS in public/admin/config.yml (i18n structure: multiple_files).
 // Runs from vite.config.js on every dev start / build; blog/ is generated output.
 import fs from "node:fs";
 import path from "node:path";
 import { marked } from "marked";
+import { parse as parseYaml } from "yaml";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const POSTS = path.join(ROOT, "posts");
@@ -12,15 +14,17 @@ const REQUIRED = ["title", "date", "description"];
 
 const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-// Minimal front matter: `key: value` lines between --- fences.
+// YAML front matter between --- fences (the CMS may quote or fold long values).
 export function parseFrontMatter(src, file = "post") {
   const m = src.replace(/\r\n/g, "\n").match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!m) throw new Error(`${file}: missing front matter (--- title/date/description ---)`);
-  const meta = {};
-  for (const line of m[1].split("\n")) {
-    const i = line.indexOf(":");
-    if (i > 0) meta[line.slice(0, i).trim()] = line.slice(i + 1).trim().replace(/^"(.*)"$/, "$1");
+  let data;
+  try {
+    data = parseYaml(m[1]) ?? {};
+  } catch (err) {
+    throw new Error(`${file}: invalid front matter: ${err.message}`);
   }
+  const meta = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v == null ? "" : String(v).trim()]));
   for (const k of REQUIRED) if (!meta[k]) throw new Error(`${file}: front matter needs "${k}"`);
   // Round-trip so impossible dates (2026-02-31) fail instead of rolling over.
   const d = new Date(`${meta.date}T00:00:00Z`);
@@ -28,6 +32,15 @@ export function parseFrontMatter(src, file = "post") {
     throw new Error(`${file}: date must be YYYY-MM-DD, got "${meta.date}"`);
   return { ...meta, body: m[2] };
 }
+
+// The CMS links uploads as /media/…; posts live in /blog/, so make it relative
+// (the site may be served from a sub-path such as GitHub Pages /<repo>/).
+marked.use({
+  walkTokens(token) {
+    if (token.type === "image" && token.href.startsWith("/media/")) token.href = `..${token.href}`;
+  },
+});
+export const renderMarkdown = (md) => marked.parse(md);
 
 // English ~200 words/min; Japanese ~500 characters/min.
 export function readingMinutes(text, lang) {
@@ -48,10 +61,10 @@ function loadPosts() {
       if (!/^[a-z0-9-]+$/.test(slug)) throw new Error(`posts/${slug}: folder name must be lowercase a-z, 0-9 and -`);
       const langs = {};
       for (const lang of LANGS) {
-        const file = path.join(POSTS, slug, `${lang}.md`);
-        if (fs.existsSync(file)) langs[lang] = parseFrontMatter(fs.readFileSync(file, "utf8"), `posts/${slug}/${lang}.md`);
+        const file = path.join(POSTS, slug, `index.${lang}.md`);
+        if (fs.existsSync(file)) langs[lang] = parseFrontMatter(fs.readFileSync(file, "utf8"), `posts/${slug}/index.${lang}.md`);
       }
-      if (!Object.keys(langs).length) throw new Error(`posts/${slug}: add en.md and/or ja.md`);
+      if (!Object.keys(langs).length) throw new Error(`posts/${slug}: add index.ja.md and/or index.en.md`);
       const date = (langs.en ?? langs.ja).date;
       return { slug, date, langs };
     })
@@ -119,7 +132,7 @@ ${perLang(post, (p, lang, isFallback) => `        <header class="post-head">
           <h1>${esc(p.title)}</h1>
           ${isFallback ? `<p class="note">${fallback(lang)}</p>` : ""}
         </header>
-        <div class="prose">${marked.parse(p.body)}</div>`)}
+        <div class="prose">${renderMarkdown(p.body)}</div>`)}
       </article>`;
   const fullTitle = (p) => `${p.title} — HAKU`;
   const main = post.langs.en ?? post.langs.ja;

@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://unpkg.com/@sveltia/cms@0.224.0/schema/sveltia-cms.json
+# Blog editor at /admin/. Saving commits to main, which deploys the site.
+# File layout must match scripts/blog.js: posts/<slug>/index.<locale>.md
+
+backend:
+  name: github
+  repo: alihaddi-dotcom/crystall-lit-hands
+  branch: main
+  commit_messages:
+    create: "Blog: add {{slug}}"
+    update: "Blog: update {{slug}}"
+    delete: "Blog: delete {{slug}}"
+
+site_url: https://alihaddi-dotcom.github.io/crystall-lit-hands/
+display_url: https://alihaddi-dotcom.github.io/crystall-lit-hands/
+
+# Images land in public/media/. The CMS requires an absolute public_folder;
+# scripts/blog.js rewrites /media/… to ../media/… so it works under any base path.
+media_folder: public/media
+public_folder: /media
+
+i18n:
+  structure: multiple_files
+  locales: [ja, en]
+  default_locale: ja
+
+collections:
+  - name: posts
+    label: ブログ / Blog
+    label_singular: 記事 / Post
+    folder: posts
+    path: "{{slug}}/index"
+    extension: md
+    format: frontmatter
+    create: true
+    delete: true
+    i18n: true
+    # Titles may be Japanese, so the URL is date + short random id.
+    slug: "{{year}}-{{month}}-{{day}}-{{uuid_shorter}}"
+    summary: "{{title}} — {{date}}"
+    sortable_fields: [date, title]
+    preview_path: "blog/{{slug}}.html"
+    fields:
+      - label: タイトル / Title
+        name: title
+        widget: string
+        i18n: true
+      - label: 公開日 / Date
+        name: date
+        widget: datetime
+        type: date
+        default: "{{now}}"
+        i18n: duplicate
+      - label: 概要 / Description
+        name: description
+        widget: text
+        i18n: true
+        hint: 記事一覧と検索結果に表示される1〜2文 / 1–2 sentences shown in the list and search results
+      - label: 本文 / Body
+        name: body
+        widget: richtext
+        i18n: true
+        hint: 目安は日本語で約1,600字、英語で約700語（約4分） / About 700 English words (≈4 min read)
