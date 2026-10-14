@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f2ec" />
+    <title data-i18n="light.title">LUMEN — Meditation in light</title>
+    <meta name="description" data-i18n-content="light.desc" content="LUMEN — short guided meditations. Breathe in, let the light settle." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@400&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="light" data-theme="light">
+    <header class="nav">
+      <a class="brand" href="#top">LUMEN</a>
+      <nav aria-label="Main">
+        <a href="#sessions" data-i18n="light.nav.sessions">Sessions</a>
+        <a href="#begin" data-i18n="light.nav.about">About</a>
+      </nav>
+      <button class="lang-toggle" type="button" data-lang-toggle data-i18n="lang.switch">日本語</button>
+      <a class="btn btn--ghost btn--small" href="#begin" data-i18n="nav.signin">Sign in</a>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <p class="eyebrow" data-i18n="light.eyebrow">Meditation, made of light</p>
+        <h1 data-i18n-html="light.h1">Breathe in.<br /><em>Let the light settle.</em></h1>
+        <p class="lede" data-i18n="light.lede">A few quiet minutes, guided by a single point of light. Nothing to fix — just follow it in, and let it go.</p>
+        <div class="actions">
+          <a class="btn btn--solid" href="#begin" data-orb><span data-i18n="light.cta">Start breathing</span> <span aria-hidden="true">→</span></a>
+          <a class="btn btn--ghost" href="#sessions" data-i18n="light.sessions">Sessions</a>
+        </div>
+        <p class="breath" aria-live="off"><span class="breath-dot" aria-hidden="true"></span><span data-breath data-i18n="breath.slow">Breathe slowly</span></p>
+      </section>
+
+      <section id="sessions" class="section">
+        <p class="eyebrow" data-i18n="light.sessions">Sessions</p>
+        <h2 data-i18n-html="light.sessions.h2">Three moments<br /><em>in your day.</em></h2>
+        <div class="cards">
+          <article class="card">
+            <span class="card-num" data-i18n="light.morning.t">5 min</span>
+            <h3 data-i18n="light.morning.h">Morning light</h3>
+            <p data-i18n="light.morning.p">Wake gently. Count ten slow breaths before the day begins.</p>
+          </article>
+          <article class="card">
+            <span class="card-num" data-i18n="light.midday.t">3 min</span>
+            <h3 data-i18n="light.midday.h">Midday pause</h3>
+            <p data-i18n="light.midday.p">Step out of the noise. One breath in, one breath out, then back.</p>
+          </article>
+          <article class="card">
+            <span class="card-num" data-i18n="light.evening.t">10 min</span>
+            <h3 data-i18n="light.evening.h">Evening release</h3>
+            <p data-i18n="light.evening.p">Let the day loosen its hold. Follow the light down into rest.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="begin" class="section section--cta">
+        <blockquote data-i18n-html="light.quote">“Nothing to fix.<br />Just this breath.”</blockquote>
+        <a class="btn btn--solid" href="#top" data-orb><span data-i18n="light.begin">Begin</span> <span aria-hidden="true">→</span></a>
+      </section>
+    </main>
+
+    <footer class="footer" data-i18n-html="light.footer">LUMEN · a prototype · <a href="./crystall.html">dark version</a></footer>
+
+    <script type="module" src="/i18n.js"></script>
+    <script type="module" src="/entry.js"></script>
+  </body>
+</html>

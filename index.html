@@ -3,67 +3,131 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b0a1f" />
-    <title>CRYSTALL — Hold the light</title>
-    <meta name="description" content="CRYSTALL — a quieter corner of the universe. Breathe, write, and find your stillness." />
+    <meta name="theme-color" content="#f4f2ec" />
+    <title data-i18n="s.title">HAKU — Energy healing salon in Kamakura</title>
+    <meta name="description" data-i18n-content="s.desc" content="HAKU — a private energy healing salon in Kamakura. Reiki, crystal light and sound sessions." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@400&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body>
+  <body class="light" data-theme="light">
     <header class="nav">
-      <a class="brand" href="#top">✧ CRYSTALL</a>
+      <a class="brand" href="#top">HAKU</a>
       <nav aria-label="Main">
-        <a href="#practice">Practice</a>
-        <a href="#journal">Journal</a>
-        <a href="#crystals">Crystals</a>
+        <a href="#about" data-i18n="s.nav.about">About</a>
+        <a href="#menu" data-i18n="s.nav.menu">Menu</a>
+        <a href="#visit" data-i18n="s.nav.visit">First visit</a>
+        <a href="#access" data-i18n="s.nav.access">Access</a>
       </nav>
-      <a class="btn btn--ghost btn--small" href="#begin">Sign in</a>
+      <button class="lang-toggle" type="button" data-lang-toggle data-i18n="lang.switch">日本語</button>
+      <a class="btn btn--solid btn--small" href="#book" data-i18n="s.nav.book">Book</a>
     </header>
 
     <main id="top">
       <section class="hero">
-        <p class="eyebrow">A quieter corner of the universe</p>
-        <h1>Hold the light.<br /><em>Find your stillness.</em></h1>
-        <p class="lede">Five quiet minutes a day. Breathe, write a little, and let the noise settle — at your own pace.</p>
+        <p class="eyebrow" data-i18n="s.eyebrow">Energy healing salon · Kamakura</p>
+        <h1 data-i18n-html="s.h1">Come back<br /><em>to your own light.</em></h1>
+        <p class="lede" data-i18n="s.lede">A quiet, private room a few minutes from the sea. Reiki, crystal light and sound sessions to help you rest deeply and feel like yourself again.</p>
         <div class="actions">
-          <a class="btn" href="#begin" data-orb>Begin a session <span aria-hidden="true">→</span></a>
-          <a class="btn btn--ghost" href="#practice">How it works</a>
+          <a class="btn btn--solid" href="#book" data-orb><span data-i18n="s.cta">Book a session</span> <span aria-hidden="true">→</span></a>
+          <a class="btn btn--ghost" href="#menu" data-i18n="s.viewMenu">View menu</a>
         </div>
-        <p class="scroll-hint" aria-hidden="true">Scroll</p>
+        <p class="breath" aria-live="off"><span class="breath-dot" aria-hidden="true"></span><span data-breath data-i18n="breath.slow">Breathe slowly</span></p>
       </section>
 
-      <section id="practice" class="section">
-        <p class="eyebrow">The practice</p>
-        <h2>Three small rituals.<br /><em>One calmer mind.</em></h2>
+      <section id="about" class="section split">
+        <div>
+          <p class="eyebrow" data-i18n="s.about.eyebrow">About HAKU</p>
+          <h2 data-i18n-html="s.about.h2">One room.<br /><em>One guest at a time.</em></h2>
+        </div>
+        <p class="body-copy" data-i18n="s.about.p">HAKU means “white” — the colour of light before it splits into all the others. Sessions are fully private and unhurried: we begin with tea and a conversation, then you simply lie down and rest.</p>
+      </section>
+
+      <section id="menu" class="section">
+        <p class="eyebrow" data-i18n="s.menu.eyebrow">Menu</p>
+        <h2 data-i18n-html="s.menu.h2">Choose<br /><em>your session.</em></h2>
+        <ul class="menu">
+          <li>
+            <h3 data-i18n="s.m1.h">Reiki healing</h3>
+            <span class="menu-meta" data-i18n="s.m1.meta">60 min · ¥9,800</span>
+            <p data-i18n="s.m1.p">Gentle hands-on energy work to release tension and help you feel calm.</p>
+          </li>
+          <li>
+            <h3 data-i18n="s.m2.h">Crystal light session</h3>
+            <span class="menu-meta" data-i18n="s.m2.meta">90 min · ¥14,000</span>
+            <p data-i18n="s.m2.p">Crystals placed around the body, combined with Reiki and guided breathing.</p>
+          </li>
+          <li>
+            <h3 data-i18n="s.m3.h">Sound &amp; breath</h3>
+            <span class="menu-meta" data-i18n="s.m3.meta">45 min · ¥7,500</span>
+            <p data-i18n="s.m3.p">Singing bowls and slow breathing. A good first step if you are new to healing.</p>
+          </li>
+        </ul>
+        <p class="note" data-i18n="s.menu.note">First visit: ¥2,000 off any session. All prices include tax.</p>
+      </section>
+
+      <section id="visit" class="section">
+        <p class="eyebrow" data-i18n="s.visit.eyebrow">Your first visit</p>
+        <h2 data-i18n-html="s.visit.h2">What to<br /><em>expect.</em></h2>
         <div class="cards">
           <article class="card">
             <span class="card-num">01</span>
-            <h3>Focus</h3>
-            <p>A guided breath that follows the light. Return to one thing, for five minutes.</p>
+            <h3 data-i18n="s.v1.h">Tea &amp; conversation</h3>
+            <p data-i18n="s.v1.p">We talk about how you feel today and what you would like from the session.</p>
           </article>
-          <article class="card" id="journal">
+          <article class="card">
             <span class="card-num">02</span>
-            <h3>Journal</h3>
-            <p>No perfect words needed. Let a thought find its place, then let it go.</p>
+            <h3 data-i18n="s.v2.h">Rest &amp; receive</h3>
+            <p data-i18n="s.v2.p">You lie down fully clothed. There is nothing you need to do.</p>
           </article>
-          <article class="card" id="crystals">
+          <article class="card">
             <span class="card-num">03</span>
-            <h3>Explore</h3>
-            <p>Amethyst, rose quartz, aquamarine — each brings its own colour and quiet character.</p>
+            <h3 data-i18n="s.v3.h">Gentle return</h3>
+            <p data-i18n="s.v3.p">Time to sit, drink some water and share anything you noticed.</p>
           </article>
         </div>
       </section>
 
-      <section id="begin" class="section section--cta">
-        <blockquote>“Light moves at its own pace.<br />So can you.”</blockquote>
-        <a class="btn" href="#top" data-orb>Start free <span aria-hidden="true">→</span></a>
+      <section class="section faq">
+        <p class="eyebrow" data-i18n="s.faq.eyebrow">Questions</p>
+        <details>
+          <summary data-i18n="s.q1">Do I need any experience?</summary>
+          <p data-i18n="s.a1">None at all. Most guests come for the first time without knowing what to expect.</p>
+        </details>
+        <details>
+          <summary data-i18n="s.q2">What should I wear?</summary>
+          <p data-i18n="s.a2">Comfortable clothes. You stay dressed for every session.</p>
+        </details>
+        <details>
+          <summary data-i18n="s.q3">Is this a medical treatment?</summary>
+          <p data-i18n="s.a3">No. Energy healing is a relaxation practice and does not diagnose or treat any condition. Please keep seeing your doctor for any health concerns.</p>
+        </details>
+      </section>
+
+      <section id="access" class="section split">
+        <div>
+          <p class="eyebrow" data-i18n="s.access.eyebrow">Access</p>
+          <h2 data-i18n-html="s.access.h2">Visit<br /><em>HAKU.</em></h2>
+        </div>
+        <dl class="info">
+          <dt data-i18n="s.i.addr">Address</dt><dd data-i18n="s.i.addr.v">Kamakura, Kanagawa (sample address)</dd>
+          <dt data-i18n="s.i.station">Station</dt><dd data-i18n="s.i.station.v">8 min walk from Kamakura Station</dd>
+          <dt data-i18n="s.i.hours">Hours</dt><dd data-i18n="s.i.hours.v">10:00–18:00 · Closed Tuesdays</dd>
+          <dt data-i18n="s.i.booking">Booking</dt><dd data-i18n="s.i.booking.v">Reservation only</dd>
+        </dl>
+      </section>
+
+      <section id="book" class="section section--cta">
+        <blockquote data-i18n-html="s.quote">“Rest is not a reward.<br />It is where you begin.”</blockquote>
+        <a class="btn btn--solid" href="#top" data-orb><span data-i18n="s.cta">Book a session</span> <span aria-hidden="true">→</span></a>
+        <p class="note" data-i18n="s.book.note">Prototype — booking is not connected.</p>
       </section>
     </main>
 
-    <footer class="footer">© CRYSTALL · a prototype</footer>
+    <footer class="footer" data-i18n-html="s.footer">HAKU is a fictional salon for a design prototype · <a href="./light.html">LUMEN</a> · <a href="./crystall.html">CRYSTALL</a></footer>
 
+    <script type="module" src="/i18n.js"></script>
     <script type="module" src="/entry.js"></script>
   </body>
 </html>

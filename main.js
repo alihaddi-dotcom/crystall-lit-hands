@@ -5,10 +5,29 @@ import {
   varying, transformNormalToView, pass, mrt, output, emissive, screenUV,
 } from "three/tsl";
 import { makeHandStrands } from "./hands.js";
+import { t } from "./i18n.js";
 import { bloom } from "three/addons/tsl/display/BloomNode.js";
 
 const small = matchMedia("(max-width: 700px)").matches;
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// <body data-theme="light"> switches the palette; everything else is shared.
+const THEMES = {
+  dark: {
+    bg: ["#1d1850", "#040410"], wander: ["#5b4bff", "#b6a2ff"], flow: ["#a77bff", "#c2185b"],
+    glow: ["#8fb8ff", "#e0d4ff"], orb: "#dcd8ff", light: "#c9c2ff",
+    hemi: ["#6f63ff", "#12081f", 0.5], rim: "#7a6bff", dust: "#aab0ff",
+    bloom: 1.2, toneMapping: THREE.ACESFilmicToneMapping,
+  },
+  light: {
+    // Flow tails fade into the background edge so they dissolve rather than end.
+    bg: ["#fbfaf6", "#e6e2d9"], wander: ["#b8b0a3", "#e9e4da"], flow: ["#cdc5b6", "#e6e2d9"],
+    glow: ["#f2c27a", "#fff1d6"], orb: "#fff4e2", light: "#fff0da",
+    hemi: ["#ffffff", "#c9c1b2", 1.8], rim: "#ffe7c4", dust: "#c9c0b0",
+    bloom: 0.7, toneMapping: THREE.NeutralToneMapping,
+  },
+};
+const theme = THEMES[document.body.dataset.theme] ?? THEMES.dark;
 
 // --- strands (CPU, once): authored over two hands, see hands.js -------------
 // Phones get roughly half the strands.
@@ -46,6 +65,7 @@ const uClick = uniform(-100);
 const uPointer = uniform(new THREE.Vector3(99, 99, 99));
 const uPush = uniform(0);
 const uGlow = uniform(0); // CTA hover, eased 0..1
+const uBreath = uniform(0); // 0 = exhaled, 1 = inhaled
 
 // --- TSL ---------------------------------------------------------------------
 const pts = storage(new THREE.StorageBufferAttribute(strandData, 4), "vec4", COUNT * N).toReadOnly();
@@ -89,13 +109,13 @@ const accent = step(0.88, rand(11)); // ~12% of strands glow
 const phase = fract(uTime.mul(0.12).add(rand(3)));
 const band = float(1).sub(smoothstep(0, 0.07, abs(progress.sub(phase))));
 const flash = exp(uTime.sub(uClick).mul(-2.5));
-const glowColor = mix(color("#8fb8ff"), color("#e0d4ff"), rand(17));
+const glowColor = mix(color(theme.glow[0]), color(theme.glow[1]), rand(17));
 
 const material = new THREE.MeshStandardNodeMaterial({ roughness: 0.32, metalness: 0.15 });
 material.positionNode = center.add(radial.mul(radius));
 material.normalNode = transformNormalToView(varying(radial));
-const wanderColor = mix(color("#5b4bff"), color("#b6a2ff"), rand(9));
-const flowColor = mix(color("#a77bff"), color("#c2185b"), smoothstep(0.35, 0.9, progress));
+const wanderColor = mix(color(theme.wander[0]), color(theme.wander[1]), rand(9));
+const flowColor = mix(color(theme.flow[0]), color(theme.flow[1]), smoothstep(0.35, 0.9, progress));
 material.colorNode = mix(wanderColor, flowColor, isFlow);
 material.emissiveNode = glowColor.mul(accent.mul(band.mul(uGlow.mul(4).add(6)).add(flash.mul(3))).add(flash.mul(0.25)));
 
@@ -103,7 +123,7 @@ material.emissiveNode = glowColor.mul(accent.mul(band.mul(uGlow.mul(4).add(6)).a
 const renderer = new THREE.WebGPURenderer();
 renderer.setPixelRatio(Math.min(devicePixelRatio, small ? 1.5 : 2));
 renderer.setSize(innerWidth, innerHeight);
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMapping = theme.toneMapping;
 renderer.domElement.className = "webgl";
 document.body.prepend(renderer.domElement);
 
@@ -119,24 +139,24 @@ tubes.frustumCulled = false; // real positions only exist on the GPU
 hero.add(tubes);
 
 // Deep indigo centre falling off to near-black.
-scene.backgroundNode = mix(color("#1d1850"), color("#040410"), screenUV.sub(0.5).length().mul(1.8).clamp(0, 1));
+scene.backgroundNode = mix(color(theme.bg[0]), color(theme.bg[1]), screenUV.sub(0.5).length().mul(1.8).clamp(0, 1));
 
 // The orb is both the glow and the main light the tubes respond to.
 const ORB = new THREE.Vector3(0, 0.35, 0.45);
 const orbMat = new THREE.MeshStandardNodeMaterial({ color: "#000000" });
-orbMat.emissiveNode = color("#dcd8ff").mul(flash.mul(4).add(uGlow.mul(5)).add(6));
+orbMat.emissiveNode = color(theme.orb).mul(flash.mul(4).add(uGlow.mul(5)).add(uBreath.mul(3)).add(5));
 const orb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 32, 16), orbMat);
 orb.position.copy(ORB);
-const orbLight = new THREE.PointLight("#c9c2ff", 9, 6, 1.2);
+const orbLight = new THREE.PointLight(theme.light, 9, 6, 1.2);
 orbLight.position.copy(ORB);
 hero.add(orb, orbLight);
 
-scene.add(new THREE.HemisphereLight("#6f63ff", "#12081f", 0.5));
-const rim = new THREE.DirectionalLight("#7a6bff", 2);
+scene.add(new THREE.HemisphereLight(...theme.hemi));
+const rim = new THREE.DirectionalLight(theme.rim, 2);
 rim.position.set(0, 2, -4);
 scene.add(rim);
 
-const stars = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicNodeMaterial({ color: "#aab0ff" }), 700);
+const stars = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicNodeMaterial({ color: theme.dust }), 700);
 const m = new THREE.Matrix4(), v = new THREE.Vector3();
 for (let i = 0; i < stars.count; i++) {
   v.set((Math.random() - 0.5) * 30, (Math.random() - 0.5) * 18, -6 - Math.random() * 10);
@@ -149,12 +169,15 @@ const scenePass = pass(scene, camera);
 scenePass.setMRT(mrt({ output, emissive }));
 const pipeline = new THREE.RenderPipeline(renderer);
 pipeline.outputNode = scenePass.getTextureNode("output")
-  .add(bloom(scenePass.getTextureNode("emissive"), 1.2, 0.5, 0));
+  .add(bloom(scenePass.getTextureNode("emissive"), theme.bloom, 0.5, 0));
 
 // --- interaction --------------------------------------------------------------
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane();
 const hit = new THREE.Vector3(), last = new THREE.Vector2(), ORIGIN = new THREE.Vector3();
 let speed = 0, glowTarget = 0;
+const BREATH = 8;
+const breathLabel = document.querySelector("[data-breath]");
+const breathDot = document.querySelector(".breath-dot");
 addEventListener("pointermove", (e) => {
   ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   speed += Math.hypot(e.clientX - last.x, e.clientY - last.y);
@@ -192,7 +215,14 @@ function render(dt) {
   renderer.domElement.style.opacity = String(1 - Math.min(s, 1) * 0.7);
 
   uGlow.value += (glowTarget - uGlow.value) * ease(5, dt);
-  orbLight.intensity = 9 + uGlow.value * 8;
+  // Breathing: 4 s in, 4 s out.
+  const phase = (uTime.value % BREATH) / BREATH;
+  uBreath.value = still ? 0.5 : 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+  orb.scale.setScalar(1 + uBreath.value * 0.45);
+  orbLight.intensity = 7 + uGlow.value * 8 + uBreath.value * 4;
+  const cue = t(phase < 0.5 ? "breath.in" : "breath.out");
+  if (breathLabel && breathLabel.textContent !== cue && !still) breathLabel.textContent = cue;
+  if (breathDot) breathDot.style.transform = `scale(${0.6 + uBreath.value})`;
 
   ray.setFromCamera(ndc, camera);
   plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(hit).negate(), ORIGIN);

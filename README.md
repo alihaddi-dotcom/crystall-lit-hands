@@ -2,7 +2,13 @@
 
 **Live:** https://alihaddi-dotcom.github.io/crystall-lit-hands/ (needs a WebGPU browser)
 
-An experimental landing page: two hands drawn from ~1,500 lit GPU tubes, holding a glowing orb, behind a plain HTML page.
+Experimental landing pages built around one WebGL/WebGPU scene: two hands drawn from ~1,500 lit GPU tubes, holding a glowing orb, behind a plain HTML page. English / Japanese.
+
+| Page | |
+| --- | --- |
+| [`/`](https://alihaddi-dotcom.github.io/crystall-lit-hands/) | **HAKU** — a fictional energy healing salon (white-light theme) |
+| [`/light.html`](https://alihaddi-dotcom.github.io/crystall-lit-hands/light.html) | **LUMEN** — meditation page (white-light theme) |
+| [`/crystall.html`](https://alihaddi-dotcom.github.io/crystall-lit-hands/crystall.html) | **CRYSTALL** — the original dark version |
 
 Built with Three.js `WebGPURenderer` and TSL. The tube technique is a from-scratch reimplementation of the approach described in Mathis Biabiany's Codrops article [Drawing With Light: An Exploration of Lit GPU Tubes with TSL and WebGPU](https://tympanus.net/codrops/2026/09/07/drawing-with-light-an-exploration-of-lit-gpu-tubes-with-tsl-and-webgpu/) ([original demo](https://luminhands.netlify.app/)).
 
@@ -22,6 +28,7 @@ npm run dev
 - **Tubes on the GPU** — each tube is a static grid of `(progress, angle)`. A TSL `positionNode` samples a Catmull-Rom curve from a storage buffer, takes the tangent by central difference, builds the cross-section from a fixed +Z axis, and outputs position and normal. `MeshStandardNodeMaterial` lights it. All strands are one instanced draw.
 - **Strand authoring** (`hands.js`, runs once on load) — the hand mesh is welded into a graph and a Dijkstra geodesic field is computed from the wrist. *Flow* strands descend the field from the fingers and trail off below the wrist; *wander* strands random-walk the surface, steered away from visited vertices.
 - **Look** — grow-in via a per-strand radius taper, travelling light pulses on ~12% of strands, selective bloom on the emissive MRT target, an orb that is also the key light.
+- **Breathing** — the orb grows and brightens on a 4 s in / 4 s out cycle; the caption and dot follow it.
 - **Page** — the canvas is a fixed backdrop. Scroll pulls the camera back and dims it; hovering a CTA brightens the orb; clicking flashes.
 - **Fallbacks** — no WebGPU → the 3D never loads and a CSS glow stands in. Phones get about half the strands. `prefers-reduced-motion` renders a still frame.
 
@@ -29,7 +36,9 @@ npm run dev
 
 | File | Purpose |
 | --- | --- |
-| `index.html`, `styles.css` | The page |
+| `index.html`, `light.html`, `crystall.html` | The three pages (`data-theme` picks the scene palette) |
+| `styles.css` | Shared styles, light theme, Japanese typography |
+| `i18n.js` | EN/JA strings and the language toggle (`?lang=ja`, saved choice, or browser language) |
 | `entry.js` | Loads the scene only when WebGPU is available |
 | `main.js` | Renderer, TSL tube material, scene, interaction |
 | `hands.js` | Builds the strand curves over the hand mesh |

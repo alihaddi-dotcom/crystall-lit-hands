@@ -1,2 +1,5 @@
 // Relative base so the build works at any path (e.g. GitHub Pages /<repo>/).
-export default { base: './', build: { target: 'esnext' } }
+export default {
+  base: './',
+  build: { target: 'esnext', rollupOptions: { input: ['index.html', 'crystall.html', 'light.html'] } },
+}

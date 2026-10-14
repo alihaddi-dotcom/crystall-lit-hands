@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0a1f" />
+    <title data-i18n="dark.title">CRYSTALL — Hold the light</title>
+    <meta name="description" data-i18n-content="dark.desc" content="CRYSTALL — a quieter corner of the universe. Breathe, write, and find your stillness." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@400&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="nav">
+      <a class="brand" href="#top">✧ CRYSTALL</a>
+      <nav aria-label="Main">
+        <a href="#practice" data-i18n="dark.nav.practice">Practice</a>
+        <a href="#journal" data-i18n="dark.nav.journal">Journal</a>
+        <a href="#crystals" data-i18n="dark.nav.crystals">Crystals</a>
+      </nav>
+      <button class="lang-toggle" type="button" data-lang-toggle data-i18n="lang.switch">日本語</button>
+      <a class="btn btn--ghost btn--small" href="#begin" data-i18n="nav.signin">Sign in</a>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <p class="eyebrow" data-i18n="dark.eyebrow">A quieter corner of the universe</p>
+        <h1 data-i18n-html="dark.h1">Hold the light.<br /><em>Find your stillness.</em></h1>
+        <p class="lede" data-i18n="dark.lede">Five quiet minutes a day. Breathe, write a little, and let the noise settle — at your own pace.</p>
+        <div class="actions">
+          <a class="btn" href="#begin" data-orb><span data-i18n="dark.cta">Begin a session</span> <span aria-hidden="true">→</span></a>
+          <a class="btn btn--ghost" href="#practice" data-i18n="dark.how">How it works</a>
+        </div>
+        <p class="scroll-hint" aria-hidden="true" data-i18n="dark.scroll">Scroll</p>
+      </section>
+
+      <section id="practice" class="section">
+        <p class="eyebrow" data-i18n="dark.practice.eyebrow">The practice</p>
+        <h2 data-i18n-html="dark.practice.h2">Three small rituals.<br /><em>One calmer mind.</em></h2>
+        <div class="cards">
+          <article class="card">
+            <span class="card-num">01</span>
+            <h3 data-i18n="dark.focus.h">Focus</h3>
+            <p data-i18n="dark.focus.p">A guided breath that follows the light. Return to one thing, for five minutes.</p>
+          </article>
+          <article class="card" id="journal">
+            <span class="card-num">02</span>
+            <h3 data-i18n="dark.journal.h">Journal</h3>
+            <p data-i18n="dark.journal.p">No perfect words needed. Let a thought find its place, then let it go.</p>
+          </article>
+          <article class="card" id="crystals">
+            <span class="card-num">03</span>
+            <h3 data-i18n="dark.explore.h">Explore</h3>
+            <p data-i18n="dark.explore.p">Amethyst, rose quartz, aquamarine — each brings its own colour and quiet character.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="begin" class="section section--cta">
+        <blockquote data-i18n-html="dark.quote">“Light moves at its own pace.<br />So can you.”</blockquote>
+        <a class="btn" href="#top" data-orb><span data-i18n="dark.start">Start free</span> <span aria-hidden="true">→</span></a>
+      </section>
+    </main>
+
+    <footer class="footer" data-i18n-html="dark.footer">© CRYSTALL · a prototype · <a href="./light.html">light version</a></footer>
+
+    <script type="module" src="/i18n.js"></script>
+    <script type="module" src="/entry.js"></script>
+  </body>
+</html>
