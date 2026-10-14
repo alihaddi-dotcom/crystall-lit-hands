@@ -8,13 +8,14 @@ Experimental landing pages built around one WebGL/WebGPU scene: two hands drawn 
 | --- | --- |
 | [`/`](https://alihaddi-dotcom.github.io/crystall-lit-hands/) | **HAKU** — a fictional energy healing salon (white-light theme) |
 | [`/light.html`](https://alihaddi-dotcom.github.io/crystall-lit-hands/light.html) | **LUMEN** — meditation page (white-light theme) |
+| [`/blog/`](https://alihaddi-dotcom.github.io/crystall-lit-hands/blog/) | **HAKU Journal** — bilingual blog, generated from Markdown |
 | [`/crystall.html`](https://alihaddi-dotcom.github.io/crystall-lit-hands/crystall.html) | **CRYSTALL** — the original dark version |
 
 Built with Three.js `WebGPURenderer` and TSL. The tube technique is a from-scratch reimplementation of the approach described in Mathis Biabiany's Codrops article [Drawing With Light: An Exploration of Lit GPU Tubes with TSL and WebGPU](https://tympanus.net/codrops/2026/09/07/drawing-with-light-an-exploration-of-lit-gpu-tubes-with-tsl-and-webgpu/) ([original demo](https://luminhands.netlify.app/)).
 
 ## Run
 
-Requires Node 20+ and a browser with WebGPU (recent Chrome, Edge or Safari).
+Requires Node 20.11+ and a browser with WebGPU (recent Chrome, Edge or Safari).
 
 ```bash
 npm install
@@ -22,6 +23,29 @@ npm run dev
 ```
 
 `npm run build` writes a static site to `dist/`.
+
+## Writing a blog post
+
+1. Create a folder in `posts/` named after the URL you want, lowercase with dashes, e.g. `posts/autumn-equinox/` → `/blog/autumn-equinox.html`.
+2. Add `en.md` and/or `ja.md`. Each starts with a header, then Markdown:
+
+   ```markdown
+   ---
+   title: Resting with the autumn equinox
+   date: 2026-09-22
+   description: One or two sentences for the post list and search results.
+   ---
+
+   Your post here. ~700 words reads in about 4 minutes.
+
+   ## A subheading
+
+   Paragraphs, **bold**, lists, > quotes and links all work.
+   ```
+
+3. `npm run dev` shows it at `/blog/` (and reloads as you edit). Push to `main` to publish.
+
+Posts are listed newest first. If one language is missing, readers of that language see the other version with a short note. `blog/` is generated on every dev start and build — don't edit it by hand. `npm test` checks the generator.
 
 ## How it works
 
@@ -38,6 +62,7 @@ npm run dev
 | --- | --- |
 | `index.html`, `light.html`, `crystall.html` | The three pages (`data-theme` picks the scene palette) |
 | `styles.css` | Shared styles, light theme, Japanese typography |
+| `scripts/blog.js`, `posts/` | Blog generator (Markdown → static HTML at build time) and the posts |
 | `i18n.js` | EN/JA strings and the language toggle (`?lang=ja`, saved choice, or browser language) |
 | `entry.js` | Loads the scene only when WebGPU is available |
 | `main.js` | Renderer, TSL tube material, scene, interaction |

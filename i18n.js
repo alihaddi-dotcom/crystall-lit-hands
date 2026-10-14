@@ -1,5 +1,7 @@
 // Tiny i18n: [data-i18n] → textContent, [data-i18n-html] → innerHTML (static,
 // trusted strings only), [data-i18n-content] → content attribute.
+// Generated blog pages carry per-page strings inline instead: data-text-<lang>,
+// data-content-<lang>, and [data-lang-block] sections hidden by CSS.
 const STRINGS = {
   en: {
     "lang.switch": "日本語",
@@ -54,6 +56,14 @@ const STRINGS = {
     "breath.in": "Breathe in",
     "breath.out": "Breathe out",
     "breath.slow": "Breathe slowly",
+    "s.nav.blog": "Blog",
+    "blog.title": "Journal — HAKU",
+    "blog.desc": "Notes from HAKU, an energy healing salon in Kamakura.",
+    "blog.eyebrow": "Journal",
+    "blog.h1": "Notes on rest<br /><em>and light.</em>",
+    "blog.back": "← All posts",
+    "blog.empty": "No posts yet.",
+    "blog.footer": "HAKU is a fictional salon for a design prototype · <a href=\"../\">Home</a>",
 
     "s.title": "HAKU — Energy healing salon in Kamakura",
     "s.desc": "HAKU — a private energy healing salon in Kamakura. Reiki, crystal light and sound sessions.",
@@ -164,6 +174,14 @@ const STRINGS = {
     "breath.in": "吸って",
     "breath.out": "吐いて",
     "breath.slow": "ゆっくり呼吸を",
+    "s.nav.blog": "ブログ",
+    "blog.title": "ジャーナル — HAKU",
+    "blog.desc": "鎌倉のエネルギーヒーリングサロン、HAKUからの便り。",
+    "blog.eyebrow": "ジャーナル",
+    "blog.h1": "休息と光について、<br /><em>綴ること。</em>",
+    "blog.back": "← 記事一覧",
+    "blog.empty": "まだ記事はありません。",
+    "blog.footer": "HAKUはデザインプロトタイプ用の架空のサロンです · <a href=\"../\">ホーム</a>",
 
     "s.title": "HAKU — 鎌倉のエネルギーヒーリングサロン",
     "s.desc": "HAKU — 鎌倉の完全予約制エネルギーヒーリングサロン。レイキ、クリスタル、サウンドのセッション。",
@@ -244,6 +262,8 @@ function apply() {
   for (const el of document.querySelectorAll("[data-i18n]")) el.textContent = t(el.dataset.i18n);
   for (const el of document.querySelectorAll("[data-i18n-html]")) el.innerHTML = t(el.dataset.i18nHtml);
   for (const el of document.querySelectorAll("[data-i18n-content]")) el.content = t(el.dataset.i18nContent);
+  for (const el of document.querySelectorAll(`[data-text-${lang}]`)) el.textContent = el.getAttribute(`data-text-${lang}`);
+  for (const el of document.querySelectorAll(`[data-content-${lang}]`)) el.content = el.getAttribute(`data-content-${lang}`);
 }
 
 export function setLang(next) {
