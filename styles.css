@@ -120,17 +120,16 @@ blockquote { font-size: clamp(28px, 3.6vw, 46px); line-height: 1.25; font-style:
 
 /* --- Light theme (light.html) ----------------------------------------- */
 body.light {
-  --bg: #e6e2d9;
+  --bg: #ffffff;
   --ink: #23211d;
   --muted: #6f695f;
   --line: #23211d24;
-  --accent: #a8814a;
+  --accent: #8a6838; /* ≥4.5:1 on white for small text (prices) */
   color: var(--ink);
-  background:
-    radial-gradient(circle at 68% 42%, #fff8ea 0, #fff3dc88 8%, transparent 30%),
-    radial-gradient(ellipse at 60% 45%, #fbfaf6 0, var(--bg) 75%) fixed;
+  /* Fallback / poster: a faint gold glow where the orb will be. */
+  background: radial-gradient(circle at 68% 42%, #f0c27a40 0, #f0c27a14 6%, transparent 22%) fixed #fff;
 }
-.light .nav { background: linear-gradient(#f6f4eeee, transparent); }
+.light .nav { background: linear-gradient(#ffffffee, transparent); }
 .light .brand { letter-spacing: 0.5em; }
 .light h1, .light h2 { color: var(--ink); }
 .light .btn {
@@ -156,7 +155,7 @@ body.light {
 @keyframes breathe { 0%, 100% { transform: scale(0.6); opacity: 0.5; } 50% { transform: scale(1.6); opacity: 1; } }
 
 @media (max-width: 700px) {
-  .light .hero h1, .light .lede { text-shadow: 0 2px 24px #f4f2ec; }
+  .light .hero h1, .light .lede { text-shadow: 0 2px 24px #fff; }
 }
 
 /* --- Language toggle + Japanese typography ----------------------------- */
@@ -175,9 +174,10 @@ body.light {
 .lang-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .nav nav + .lang-toggle { margin-left: 4px; }
 
-:lang(ja) { font-family: "DM Sans", "Noto Sans JP", system-ui, sans-serif; }
-:lang(ja) h1, :lang(ja) h2, :lang(ja) blockquote, :lang(ja) .card h3 {
-  font-family: "Playfair Display", "Noto Serif JP", serif;
+/* Japanese is set entirely in Mincho; headings keep Playfair for Latin glyphs. */
+:lang(ja) { font-family: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif; }
+:lang(ja) h1, :lang(ja) h2, :lang(ja) blockquote, :lang(ja) .card h3, :lang(ja) .menu h3 {
+  font-family: "Playfair Display", "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
   letter-spacing: 0.02em;
 }
 :lang(ja) h1 { font-size: clamp(34px, 4.8vw, 66px); line-height: 1.35; }
@@ -203,7 +203,7 @@ body.light {
   padding: 28px 0;
   border-bottom: 1px solid var(--line);
 }
-.menu h3 { font-family: "Playfair Display", "Noto Serif JP", serif; font-weight: 400; font-size: 26px; margin: 0; }
+.menu h3 { font-family: "Playfair Display", serif; font-weight: 400; font-size: 26px; margin: 0; }
 .menu-meta { font-size: 14px; color: var(--accent); white-space: nowrap; align-self: center; }
 .menu p { grid-column: 1 / -1; margin: 0; color: var(--muted); line-height: 1.7; max-width: 560px; }
 .note { font-size: 13px; color: var(--muted); margin-top: 24px; }

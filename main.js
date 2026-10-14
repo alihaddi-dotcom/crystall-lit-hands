@@ -17,14 +17,16 @@ const THEMES = {
     bg: ["#1d1850", "#040410"], wander: ["#5b4bff", "#b6a2ff"], flow: ["#a77bff", "#c2185b"],
     glow: ["#8fb8ff", "#e0d4ff"], orb: "#dcd8ff", light: "#c9c2ff",
     hemi: ["#6f63ff", "#12081f", 0.5], rim: "#7a6bff", dust: "#aab0ff",
-    bloom: 1.2, toneMapping: THREE.ACESFilmicToneMapping,
+    orbScale: 1, bloom: 1.2, toneMapping: THREE.ACESFilmicToneMapping,
   },
   light: {
-    // Flow tails fade into the background edge so they dissolve rather than end.
-    bg: ["#fbfaf6", "#e6e2d9"], wander: ["#b8b0a3", "#e9e4da"], flow: ["#cdc5b6", "#e6e2d9"],
-    glow: ["#f2c27a", "#fff1d6"], orb: "#fff4e2", light: "#fff0da",
-    hemi: ["#ffffff", "#c9c1b2", 1.8], rim: "#ffe7c4", dust: "#c9c0b0",
-    bloom: 0.7, toneMapping: THREE.NeutralToneMapping,
+    // Pure white: added light can't show on white, so strands are mid greys,
+    // the orb is a dim gold (orbScale), and flow tails fade into the white.
+    bg: ["#ffffff", "#ffffff"], wander: ["#8f877a", "#c9c2b6"], flow: ["#a39a8a", "#ffffff"],
+    glow: ["#e0a95a", "#f3d39c"], orb: "#f0c27a", light: "#fff0da",
+    hemi: ["#ffffff", "#b9b1a3", 1.1], rim: "#ffe7c4", dust: "#d8d2c8",
+    // Linear keeps white at 1.0; Neutral/ACES would grey it out.
+    orbScale: 0.16, bloom: 0.5, toneMapping: THREE.LinearToneMapping,
   },
 };
 const theme = THEMES[document.body.dataset.theme] ?? THEMES.dark;
@@ -144,7 +146,7 @@ scene.backgroundNode = mix(color(theme.bg[0]), color(theme.bg[1]), screenUV.sub(
 // The orb is both the glow and the main light the tubes respond to.
 const ORB = new THREE.Vector3(0, 0.35, 0.45);
 const orbMat = new THREE.MeshStandardNodeMaterial({ color: "#000000" });
-orbMat.emissiveNode = color(theme.orb).mul(flash.mul(4).add(uGlow.mul(5)).add(uBreath.mul(3)).add(5));
+orbMat.emissiveNode = color(theme.orb).mul(flash.mul(4).add(uGlow.mul(5)).add(uBreath.mul(3)).add(5).mul(theme.orbScale));
 const orb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 32, 16), orbMat);
 orb.position.copy(ORB);
 const orbLight = new THREE.PointLight(theme.light, 9, 6, 1.2);
