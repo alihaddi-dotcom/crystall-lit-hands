@@ -5,7 +5,8 @@ import { t } from "./i18n.js";
 
 // Shared stage: renderer, theme, orb, breathing, scroll and pointer. The visual
 // itself is a module picked per page:
-//   <body data-visual="tubes|dust" data-shape="hands|diamond" data-theme="dark|light">
+//   <body data-visual="tubes|dust" data-shape="hands|diamond|merkaba" data-theme="dark|light">
+// (tubes: hands|diamond; dust: diamond|merkaba)
 
 const small = matchMedia("(max-width: 700px)").matches;
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -15,6 +16,8 @@ const STAGING = {
   hands: { orb: [0, 0.35, 0.45], tilt: 0, y: 0, spin: 0 },
   // Tilted toward the camera so the table shows; the orb glows inside the stone.
   diamond: { orb: [0, -0.15, 0], tilt: 0.35, y: 0.35, spin: 0.12 },
+  // Star tetrahedron: the orb at the centre where both tetrahedra meet.
+  merkaba: { orb: [0, 0, 0], tilt: 0.18, y: 0.1, spin: 0.15 },
 }[SHAPE] ?? { orb: [0, 0.35, 0.45], tilt: 0, y: 0, spin: 0 };
 
 // <body data-theme="light"> switches the palette; everything else is shared.
@@ -71,7 +74,7 @@ stage.position.y = STAGING.y;
 hero.add(stage);
 
 const visual = VISUAL === "dust"
-  ? (await import("./dust.js")).createDust({ theme, small, still, u, renderer, spin: STAGING.spin })
+  ? (await import("./dust.js")).createDust({ shape: SHAPE, theme, small, still, u, renderer, spin: STAGING.spin })
   : await (await import("./tubes.js")).createTubes({ shape: SHAPE, theme, small, u, spin: STAGING.spin });
 stage.add(visual.object);
 

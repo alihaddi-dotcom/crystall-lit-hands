@@ -6,7 +6,7 @@ Experimental landing pages built around one WebGL/WebGPU scene: ~1,500 lit GPU t
 
 | Page | |
 | --- | --- |
-| [`/`](https://alihaddi-dotcom.github.io/crystall-lit-hands/) | **HAKU** — a fictional energy healing salon (white-light theme, particle diamond) |
+| [`/`](https://alihaddi-dotcom.github.io/crystall-lit-hands/) | **HAKU** — a fictional energy healing salon (white-light theme, particle merkaba) |
 | [`/light.html`](https://alihaddi-dotcom.github.io/crystall-lit-hands/light.html) | **LUMEN** — meditation page (white-light theme) |
 | [`/blog/`](https://alihaddi-dotcom.github.io/crystall-lit-hands/blog/) | **HAKU Journal** — bilingual blog, generated from Markdown |
 | [`/crystall.html`](https://alihaddi-dotcom.github.io/crystall-lit-hands/crystall.html) | **CRYSTALL** — the original dark version |
@@ -67,7 +67,7 @@ Posts are listed newest first. If one language is missing, readers of that langu
 
 - **Tubes on the GPU** — each tube is a static grid of `(progress, angle)`. A TSL `positionNode` samples a Catmull-Rom curve from a storage buffer, takes the tangent by central difference, builds the cross-section from a fixed +Z axis, and outputs position and normal. `MeshStandardNodeMaterial` lights it. All strands are one instanced draw.
 - **Strand authoring** (`strands.js`, runs once on load) — the mesh (hand, or a code-built diamond via `<body data-shape="diamond">`) is welded into a graph and a Dijkstra geodesic field is computed from its lowest point (wrist / culet). *Flow* strands descend the field and trail off below; *wander* strands random-walk the surface, steered away from visited vertices.
-- **Dust visual** (`dust.js`, `<body data-visual="dust">`) — ~40k GPU motes sampled on the diamond (45% facet edges, 50% faces, 5% inside). A TSL compute shader springs each to its target with slow noise, flows them around the pointer, bursts on click and loosens the shape as you scroll.
+- **Dust visual** (`dust.js`, `<body data-visual="dust">`) — ~40k GPU motes sampled on a merkaba (star tetrahedron, its two halves counter-rotating) or a diamond (`data-shape="merkaba|diamond"`; 45% edges, 50% faces, 5% inside). A TSL compute shader springs each to its target with slow noise, flows them around the pointer, bursts on click and loosens the shape as you scroll.
 - **Look** — grow-in via a per-strand radius taper, travelling light pulses on ~12% of strands, selective bloom on the emissive MRT target, an orb that is also the key light.
 - **Breathing** — the orb grows and brightens on a 4 s in / 4 s out cycle; the caption and dot follow it.
 - **Page** — the canvas is a fixed backdrop. Scroll pulls the camera back and dims it; hovering a CTA brightens the orb; clicking flashes.
