@@ -1,15 +1,21 @@
 import * as THREE from "three/webgpu";
-import {
-  Fn, attribute, instanceIndex, storage, uniform, uint, float, vec3, color,
-  cross, normalize, cos, sin, exp, abs, fract, hash, mix, smoothstep, step,
-  varying, transformNormalToView, pass, mrt, output, emissive, screenUV,
-} from "three/tsl";
-import { makeHandStrands } from "./hands.js";
-import { t } from "./i18n.js";
+import { uniform, color, exp, mix, pass, mrt, output, emissive, screenUV } from "three/tsl";
 import { bloom } from "three/addons/tsl/display/BloomNode.js";
+import { t } from "./i18n.js";
+
+// Shared stage: renderer, theme, orb, breathing, scroll and pointer. The visual
+// itself is a module picked per page:
+//   <body data-visual="tubes|dust" data-shape="hands|diamond" data-theme="dark|light">
 
 const small = matchMedia("(max-width: 700px)").matches;
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const { visual: VISUAL = "tubes", shape: SHAPE = "hands" } = document.body.dataset;
+
+const STAGING = {
+  hands: { orb: [0, 0.35, 0.45], tilt: 0, y: 0, spin: 0 },
+  // Tilted toward the camera so the table shows; the orb glows inside the stone.
+  diamond: { orb: [0, -0.15, 0], tilt: 0.35, y: 0.35, spin: 0.12 },
+}[SHAPE] ?? { orb: [0, 0.35, 0.45], tilt: 0, y: 0, spin: 0 };
 
 // <body data-theme="light"> switches the palette; everything else is shared.
 const THEMES = {
@@ -17,6 +23,7 @@ const THEMES = {
     bg: ["#1d1850", "#040410"], wander: ["#5b4bff", "#b6a2ff"], flow: ["#a77bff", "#c2185b"],
     glow: ["#8fb8ff", "#e0d4ff"], orb: "#dcd8ff", light: "#c9c2ff",
     hemi: ["#6f63ff", "#12081f", 0.5], rim: "#7a6bff", dust: "#aab0ff",
+    motes: ["#9d8cff", "#f1ecff"], motesAdditive: true,
     orbScale: 1, bloom: 1.2, toneMapping: THREE.ACESFilmicToneMapping,
   },
   light: {
@@ -25,101 +32,23 @@ const THEMES = {
     bg: ["#ffffff", "#ffffff"], wander: ["#8f877a", "#c9c2b6"], flow: ["#a39a8a", "#ffffff"],
     glow: ["#e0a95a", "#f3d39c"], orb: "#f0c27a", light: "#fff0da",
     hemi: ["#ffffff", "#b9b1a3", 1.1], rim: "#ffe7c4", dust: "#d8d2c8",
+    // Motes: warm grey on the faces, gold on the facet edges.
+    motes: ["#b9ad99", "#b8893f"], motesAdditive: false,
     // Linear keeps white at 1.0; Neutral/ACES would grey it out.
     orbScale: 0.16, bloom: 0.5, toneMapping: THREE.LinearToneMapping,
   },
 };
 const theme = THEMES[document.body.dataset.theme] ?? THEMES.dark;
 
-// --- strands (CPU, once): authored over two hands, see hands.js -------------
-// Phones get roughly half the strands.
-const FLOW = small ? 240 : 500, WANDER = small ? 460 : 1000, COUNT = FLOW + WANDER;
-const N = 64; // control points per strand
-const strandData = await makeHandStrands(FLOW, WANDER, N);
-
-// --- tube geometry: only (progress, angle); positions are computed on the GPU --
-const TUBULAR = 90, RADIAL = 6;
-function makeTubeGrid() {
-  const verts = (TUBULAR + 1) * (RADIAL + 1);
-  const progress = new Float32Array(verts), angle = new Float32Array(verts);
-  for (let j = 0, k = 0; j <= TUBULAR; j++)
-    for (let r = 0; r <= RADIAL; r++, k++) {
-      progress[k] = j / TUBULAR;
-      angle[k] = (r / RADIAL) * Math.PI * 2;
-    }
-  const index = [];
-  for (let j = 0; j < TUBULAR; j++)
-    for (let r = 0; r < RADIAL; r++) {
-      const a = j * (RADIAL + 1) + r, b = a + RADIAL + 1;
-      index.push(a, b, a + 1, b, b + 1, a + 1);
-    }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(verts * 3), 3));
-  g.setAttribute("progress", new THREE.BufferAttribute(progress, 1));
-  g.setAttribute("angle", new THREE.BufferAttribute(angle, 1));
-  g.setIndex(index);
-  return g;
-}
-
-// --- uniforms ----------------------------------------------------------------
+// --- shared uniforms -----------------------------------------------------------
 const uTime = uniform(0);
 const uClick = uniform(-100);
 const uPointer = uniform(new THREE.Vector3(99, 99, 99));
 const uPush = uniform(0);
 const uGlow = uniform(0); // CTA hover, eased 0..1
 const uBreath = uniform(0); // 0 = exhaled, 1 = inhaled
-
-// --- TSL ---------------------------------------------------------------------
-const pts = storage(new THREE.StorageBufferAttribute(strandData, 4), "vec4", COUNT * N).toReadOnly();
-
-const point = (k) => pts.element(instanceIndex.mul(N).add(uint(k.clamp(0, N - 1)))).xyz;
-
-// Catmull-Rom through the strand's control points, plus the pointer push.
-const sampleCurve = Fn(([p]) => {
-  const t = p.clamp(0, 1).mul(N - 1);
-  const i = t.floor(), f = t.sub(i);
-  const p0 = point(i.sub(1)), p1 = point(i), p2 = point(i.add(1)), p3 = point(i.add(2));
-  const c = p1.mul(2)
-    .add(p2.sub(p0).mul(f))
-    .add(p0.mul(2).sub(p1.mul(5)).add(p2.mul(4)).sub(p3).mul(f.mul(f)))
-    .add(p3.sub(p0).add(p1.sub(p2).mul(3)).mul(f.mul(f).mul(f)))
-    .mul(0.5);
-  const d = c.sub(uPointer);
-  return c.add(d.mul(uPush.mul(exp(d.dot(d).mul(-6)))));
-});
-
-const progress = attribute("progress", "float");
-const angle = attribute("angle", "float");
-const rand = (o) => hash(instanceIndex.add(o));
-
-const center = sampleCurve(progress);
-const EPS = 0.004;
-const tangent = normalize(sampleCurve(progress.add(EPS)).sub(sampleCurve(progress.sub(EPS))));
-// Fixed-axis frame: singular only where the tangent is parallel to +Z.
-const b1 = normalize(cross(tangent, vec3(0, 0, 1)));
-const b2 = cross(tangent, b1);
-const radial = b1.mul(cos(angle)).add(b2.mul(sin(angle)));
-
-// Grow-in: each strand's head sweeps 0 -> 1 after a random delay.
-const head = uTime.sub(rand(1).mul(2)).mul(0.45).clamp(0, 1.1);
-const taper = smoothstep(0, 0.05, progress).mul(smoothstep(0, 0.05, float(1).sub(progress)));
-const growth = float(1).sub(smoothstep(head.sub(0.08), head, progress));
-const radius = mix(0.003, 0.008, rand(5)).mul(taper).mul(growth);
-
-const isFlow = pts.element(instanceIndex.mul(N)).w; // 1 = flow strand with tail
-const accent = step(0.88, rand(11)); // ~12% of strands glow
-const phase = fract(uTime.mul(0.12).add(rand(3)));
-const band = float(1).sub(smoothstep(0, 0.07, abs(progress.sub(phase))));
 const flash = exp(uTime.sub(uClick).mul(-2.5));
-const glowColor = mix(color(theme.glow[0]), color(theme.glow[1]), rand(17));
-
-const material = new THREE.MeshStandardNodeMaterial({ roughness: 0.32, metalness: 0.15 });
-material.positionNode = center.add(radial.mul(radius));
-material.normalNode = transformNormalToView(varying(radial));
-const wanderColor = mix(color(theme.wander[0]), color(theme.wander[1]), rand(9));
-const flowColor = mix(color(theme.flow[0]), color(theme.flow[1]), smoothstep(0.35, 0.9, progress));
-material.colorNode = mix(wanderColor, flowColor, isFlow);
-material.emissiveNode = glowColor.mul(accent.mul(band.mul(uGlow.mul(4).add(6)).add(flash.mul(3))).add(flash.mul(0.25)));
+const u = { uTime, uPointer, uPush, uGlow, uBreath, flash };
 
 // --- scene -------------------------------------------------------------------
 const renderer = new THREE.WebGPURenderer();
@@ -133,25 +62,30 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.1, 50);
 camera.position.set(0, 0.1, 7.2);
 
-// Hands, orb and its light move together (desktop: shifted right of the copy).
+// Visual, orb and its light move together (desktop: shifted right of the copy).
 const hero = new THREE.Group();
 scene.add(hero);
-const tubes = new THREE.InstancedMesh(makeTubeGrid(), material, COUNT);
-tubes.frustumCulled = false; // real positions only exist on the GPU
-hero.add(tubes);
+const stage = new THREE.Group(); // per-shape tilt and offset
+stage.rotation.x = STAGING.tilt;
+stage.position.y = STAGING.y;
+hero.add(stage);
 
-// Deep indigo centre falling off to near-black.
+const visual = VISUAL === "dust"
+  ? (await import("./dust.js")).createDust({ theme, small, still, u, renderer, spin: STAGING.spin })
+  : await (await import("./tubes.js")).createTubes({ shape: SHAPE, theme, small, u, spin: STAGING.spin });
+stage.add(visual.object);
+
 scene.backgroundNode = mix(color(theme.bg[0]), color(theme.bg[1]), screenUV.sub(0.5).length().mul(1.8).clamp(0, 1));
 
 // The orb is both the glow and the main light the tubes respond to.
-const ORB = new THREE.Vector3(0, 0.35, 0.45);
+const ORB = new THREE.Vector3(...STAGING.orb);
 const orbMat = new THREE.MeshStandardNodeMaterial({ color: "#000000" });
 orbMat.emissiveNode = color(theme.orb).mul(flash.mul(4).add(uGlow.mul(5)).add(uBreath.mul(3)).add(5).mul(theme.orbScale));
 const orb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 32, 16), orbMat);
 orb.position.copy(ORB);
 const orbLight = new THREE.PointLight(theme.light, 9, 6, 1.2);
 orbLight.position.copy(ORB);
-hero.add(orb, orbLight);
+stage.add(orb, orbLight);
 
 scene.add(new THREE.HemisphereLight(...theme.hemi));
 const rim = new THREE.DirectionalLight(theme.rim, 2);
@@ -185,7 +119,10 @@ addEventListener("pointermove", (e) => {
   speed += Math.hypot(e.clientX - last.x, e.clientY - last.y);
   last.set(e.clientX, e.clientY);
 });
-const flashNow = () => { uClick.value = uTime.value; };
+const flashNow = () => {
+  uClick.value = uTime.value;
+  visual.burst?.();
+};
 for (const el of document.querySelectorAll("[data-orb]")) {
   el.addEventListener("pointerenter", () => { glowTarget = 1; });
   el.addEventListener("pointerleave", () => { glowTarget = 0; });
@@ -207,7 +144,7 @@ function render(dt) {
   if (still) uTime.value = 12; // fully grown, no motion
   else uTime.value += dt;
 
-  // Scroll: pull back and lift the hands; canvas dims to a backdrop.
+  // Scroll: pull back and lift the visual; canvas dims to a backdrop.
   const s = Math.min(scrollY / innerHeight, 1.5);
   const cam = new THREE.Vector3(ndc.x * 0.35, 0.1 + ndc.y * 0.2, 7.2 + s * 2.2);
   if (still) camera.position.set(0, 0.1, 7.2 + s * 2.2);
@@ -228,10 +165,12 @@ function render(dt) {
 
   ray.setFromCamera(ndc, camera);
   plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(hit).negate(), ORIGIN);
-  if (ray.ray.intersectPlane(plane, hit)) uPointer.value.copy(tubes.worldToLocal(hit));
+  if (ray.ray.intersectPlane(plane, hit)) uPointer.value.copy(visual.object.worldToLocal(hit));
   uPush.value += (Math.min(speed * 0.004, 0.6) - uPush.value) * ease(6, dt);
   speed *= Math.exp(-8 * dt);
 
+  // Scrolling past the hero loosens the shape (dust drifts apart).
+  if (!still) visual.update(dt, THREE.MathUtils.smoothstep(s, 0.15, 1));
   pipeline.render();
 }
 

@@ -2,11 +2,11 @@
 
 **Live:** https://alihaddi-dotcom.github.io/crystall-lit-hands/ (needs a WebGPU browser)
 
-Experimental landing pages built around one WebGL/WebGPU scene: two hands drawn from ~1,500 lit GPU tubes, holding a glowing orb, behind a plain HTML page. English / Japanese.
+Experimental landing pages built around one WebGL/WebGPU scene: ~1,500 lit GPU tubes drawn over two hands or a diamond, around a glowing orb, behind a plain HTML page. English / Japanese.
 
 | Page | |
 | --- | --- |
-| [`/`](https://alihaddi-dotcom.github.io/crystall-lit-hands/) | **HAKU** — a fictional energy healing salon (white-light theme) |
+| [`/`](https://alihaddi-dotcom.github.io/crystall-lit-hands/) | **HAKU** — a fictional energy healing salon (white-light theme, particle diamond) |
 | [`/light.html`](https://alihaddi-dotcom.github.io/crystall-lit-hands/light.html) | **LUMEN** — meditation page (white-light theme) |
 | [`/blog/`](https://alihaddi-dotcom.github.io/crystall-lit-hands/blog/) | **HAKU Journal** — bilingual blog, generated from Markdown |
 | [`/crystall.html`](https://alihaddi-dotcom.github.io/crystall-lit-hands/crystall.html) | **CRYSTALL** — the original dark version |
@@ -66,7 +66,8 @@ Posts are listed newest first. If one language is missing, readers of that langu
 ## How it works
 
 - **Tubes on the GPU** — each tube is a static grid of `(progress, angle)`. A TSL `positionNode` samples a Catmull-Rom curve from a storage buffer, takes the tangent by central difference, builds the cross-section from a fixed +Z axis, and outputs position and normal. `MeshStandardNodeMaterial` lights it. All strands are one instanced draw.
-- **Strand authoring** (`hands.js`, runs once on load) — the hand mesh is welded into a graph and a Dijkstra geodesic field is computed from the wrist. *Flow* strands descend the field from the fingers and trail off below the wrist; *wander* strands random-walk the surface, steered away from visited vertices.
+- **Strand authoring** (`strands.js`, runs once on load) — the mesh (hand, or a code-built diamond via `<body data-shape="diamond">`) is welded into a graph and a Dijkstra geodesic field is computed from its lowest point (wrist / culet). *Flow* strands descend the field and trail off below; *wander* strands random-walk the surface, steered away from visited vertices.
+- **Dust visual** (`dust.js`, `<body data-visual="dust">`) — ~40k GPU motes sampled on the diamond (45% facet edges, 50% faces, 5% inside). A TSL compute shader springs each to its target with slow noise, flows them around the pointer, bursts on click and loosens the shape as you scroll.
 - **Look** — grow-in via a per-strand radius taper, travelling light pulses on ~12% of strands, selective bloom on the emissive MRT target, an orb that is also the key light.
 - **Breathing** — the orb grows and brightens on a 4 s in / 4 s out cycle; the caption and dot follow it.
 - **Page** — the canvas is a fixed backdrop. Scroll pulls the camera back and dims it; hovering a CTA brightens the orb; clicking flashes.
@@ -82,8 +83,9 @@ Posts are listed newest first. If one language is missing, readers of that langu
 | `public/admin/` | Blog editor ([Sveltia CMS](https://sveltiacms.app/), MIT) and its config |
 | `i18n.js` | EN/JA strings and the language toggle (`?lang=ja`, saved choice, or browser language) |
 | `entry.js` | Loads the scene only when WebGPU is available |
-| `main.js` | Renderer, TSL tube material, scene, interaction |
-| `hands.js` | Builds the strand curves over the hand mesh |
+| `main.js` | Shared stage: renderer, theme, orb, breathing, scroll, pointer |
+| `tubes.js`, `dust.js` | The two visuals: lit GPU tubes, or compute-shader particles |
+| `strands.js` | Builds the strand curves over a mesh: hands (`public/left.glb`) or a brilliant-cut diamond |
 | `public/left.glb` | Hand mesh (mirrored for the right hand) |
 
 ## Credits

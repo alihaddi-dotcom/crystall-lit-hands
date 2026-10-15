@@ -2,11 +2,12 @@ import * as THREE from "three/webgpu";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
-// Hand: @webxr-input-profiles/assets generic-hand (MIT), rest pose.
-// Strand authoring follows the article: weld the mesh into a graph, run a
-// geodesic (Dijkstra) field from the wrist, then
-//  - flow strands descend the field from the fingers and trail off past the wrist,
+// Strand authoring follows the article: weld a mesh into a graph, run a
+// geodesic (Dijkstra) field from its lowest point, then
+//  - flow strands descend the field and trail off below as tails,
 //  - wander strands random-walk the surface, steered by an occupancy count.
+// Shapes: "hands" (@webxr-input-profiles/assets generic-hand, MIT, mirrored)
+// and "diamond" (a round brilliant cut built in code).
 
 const HAND_LENGTH = 2.5;
 const WRIST = new THREE.Vector3(-0.22, -1.35, 0);
@@ -36,7 +37,29 @@ async function loadHandGraph() {
     new THREE.Vector3(s, s, s),
   );
   g.applyMatrix4(pose);
+  return buildGraph(g);
+}
 
+// Round brilliant, girdle radius 1.25, axis +Y: table, crown, girdle, pavilion.
+// 16 sides keep flat facets; the profile is subdivided so walks have room.
+// Also used by dust.js for its particle targets.
+export function diamondGeometry() {
+  const profile = [[0, 0.44], [0.71, 0.44], [1.25, 0.04], [1.25, 0], [0, -1.08]];
+  const pts = [];
+  for (let i = 0; i < profile.length - 1; i++) {
+    const a = new THREE.Vector2(...profile[i]), b = new THREE.Vector2(...profile[i + 1]);
+    const steps = Math.max(1, Math.round(a.distanceTo(b) / 0.08));
+    for (let k = 0; k < steps; k++) pts.push(a.clone().lerp(b, k / steps));
+  }
+  pts.push(new THREE.Vector2(...profile.at(-1)));
+  // Lathe winds the profile top-down; reverse it so normals face outward.
+  return new THREE.LatheGeometry(pts.reverse(), 16);
+}
+
+const diamondGraph = () => buildGraph(diamondGeometry());
+
+function buildGraph(g) {
+  for (const name of Object.keys(g.attributes)) if (name !== "position") g.deleteAttribute(name);
   const welded = mergeVertices(g, 1e-4);
   welded.computeVertexNormals();
   const pos = welded.attributes.position, nrm = welded.attributes.normal, idx = welded.index.array;
@@ -52,7 +75,7 @@ async function loadHandGraph() {
 }
 
 // ponytail: O(V²) Dijkstra, fine for ~1k vertices; use a heap for dense meshes.
-function geodesicFromWrist({ P, adj }) {
+function geodesicFromBottom({ P, adj }) {
   const V = P.length;
   const minY = Math.min(...P.map((p) => p.y));
   const dist = new Float32Array(V).fill(Infinity);
@@ -73,8 +96,8 @@ function geodesicFromWrist({ P, adj }) {
 
 const onSurface = (graph, v, lift) => graph.P[v].clone().addScaledVector(graph.N[v], lift);
 
-function flowStrand(graph, dist, maxDist) {
-  // Start high on the hand (mostly fingers), descend to the wrist.
+function flowStrand(graph, dist, maxDist, tailBiasX) {
+  // Start high on the shape, descend to its lowest point.
   let v;
   do v = (Math.random() * graph.P.length) | 0;
   while (dist[v] < maxDist * (0.35 + Math.random() * 0.5));
@@ -91,9 +114,9 @@ function flowStrand(graph, dist, maxDist) {
     v = best;
     pts.push(onSurface(graph, v, lift));
   }
-  // Tail: keep falling and fan out below the wrist.
+  // Tail: keep falling and fan out below.
   const dir = pts.length > 1 ? pts.at(-1).clone().sub(pts.at(-2)).normalize() : new THREE.Vector3(0, -1, 0);
-  const pull = new THREE.Vector3((Math.random() - 0.7) * 1.6, -1, (Math.random() - 0.5) * 0.8).normalize();
+  const pull = new THREE.Vector3((Math.random() - 0.5 - tailBiasX) * 1.6, -1, (Math.random() - 0.5) * 0.8).normalize();
   const p = pts.at(-1).clone();
   for (let i = 0, n = 20 + Math.random() * 40; i < n; i++) {
     dir.lerp(pull, 0.12).normalize();
@@ -139,18 +162,25 @@ function resample(pts, n) {
   return out;
 }
 
-// Returns packed vec4 control points (w = 1 for flow strands) for both hands.
-export async function makeHandStrands(flowCount, wanderCount, N) {
-  const graph = await loadHandGraph();
-  const dist = geodesicFromWrist(graph);
+const SHAPES = {
+  // Left hand only; odd strands are mirrored into the right hand, tails fan outward.
+  hands: { graph: loadHandGraph, mirror: true, tailBiasX: 0.2 },
+  diamond: { graph: diamondGraph, mirror: false, tailBiasX: 0 },
+};
+
+// Returns packed vec4 control points (w = 1 for flow strands).
+export async function makeStrands(shape, flowCount, wanderCount, N) {
+  const cfg = SHAPES[shape] ?? SHAPES.hands;
+  const graph = await cfg.graph();
+  const dist = geodesicFromBottom(graph);
   const maxDist = Math.max(...dist.filter(Number.isFinite));
   const visits = new Float32Array(graph.P.length);
   const count = flowCount + wanderCount;
   const data = new Float32Array(count * N * 4);
   for (let s = 0; s < count; s++) {
     const isFlow = s < flowCount;
-    const pts = resample(isFlow ? flowStrand(graph, dist, maxDist) : wanderStrand(graph, visits), N);
-    const mirror = s % 2 ? -1 : 1; // odd strands go on the right hand
+    const pts = resample(isFlow ? flowStrand(graph, dist, maxDist, cfg.tailBiasX) : wanderStrand(graph, visits), N);
+    const mirror = cfg.mirror && s % 2 ? -1 : 1;
     pts.forEach((p, i) => data.set([p.x * mirror, p.y, p.z, isFlow ? 1 : 0], (s * N + i) * 4));
   }
   return data;
